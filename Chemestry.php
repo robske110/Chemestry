@@ -1,5 +1,10 @@
-<?php
-
+﻿<?php
+function clear(){
+	for($i = 0; $i <= 10000; $i++){
+		echo(PHP_EOL.PHP_EOL.PHP_EOL.PHP_EOL);
+	}
+}
+clear();
 $main = new main();
 $main->run();
 echo("Exit:NoErr");
@@ -31,13 +36,13 @@ class main{
 	];
 
 	public $shellPeriodAlignment = [ 					#Per Periode welche Schalen vor-
-	1 => ["K",NULL,NULL,NULL,NULL,NULL,NULL,],			#handen sind!
-	2 => ["K","L",NULL,NULL,NULL,NULL,NULL,],
-	3 => ["K","L","M",NULL,NULL,NULL,NULL,],
-	4 => ["K","L","M","N",NULL,NULL,NULL,],
-	5 => ["K","L","M","N","O",NULL,NULL,],
-	6 => ["K","L","M","N","O","P",NULL,],
-	7 => ["K","L","M","N","O","P","Q",],
+	1 => ["K",NULL,NULL,NULL,NULL,NULL,NULL],			#handen sind!
+	2 => ["K","L",NULL,NULL,NULL,NULL,NULL],
+	3 => ["K","L","M",NULL,NULL,NULL,NULL],
+	4 => ["K","L","M","N",NULL,NULL,NULL],
+	5 => ["K","L","M","N","O",NULL,NULL],
+	6 => ["K","L","M","N","O","P",NULL],
+	7 => ["K","L","M","N","O","P","Q"],
 	];
 
 	public $orbitalPerShell = [							#Welche Schalen welche Typen von
@@ -53,31 +58,52 @@ class main{
 	"s" => 1,"p" => 3,"d" => 5,"f" => 6					#viele Orbitale halten, welche
 	];													#maximal 2 Elektronen halten können!
 
-	public $mainGroupNumbers = [						#Normale Zahlen zu Römischen Zahlen
+	public $mainGroupNumbers = [						#Nummern zu römischen Zahlen
 	1 => "I",2 => "II",3 => "III",4 => "IV",
 	5 => "V",6 => "VI",7 => "VII",8 => "VIII"
 	];
 
-	public function __construct(){
+	public function __construct(){						#Technische Initialisierung
+		global $stdin;
+		$stdin = fopen("php://stdin", "r");
+		stream_set_blocking($stdin, 0);
+		$this->init();
+	}
+
+	public function init(){
 		echo "Command? (type help to get a list of avaivible commands)".PHP_EOL;
 	}
 
 	public function run(){
 		while(!$this->doExit){
-  			$input = stream_get_line(STDIN, 1024, PHP_EOL);
-  			$args = explode(" ",$input);
+  			//$input = stream_get_line(STDIN, 1024, PHP_EOL);
+  			$foundInput = false;
+  			while(!$foundInput){						#Einlesen des Kommandos
+  				global $stdin;
+  				sleep(1);
+				$input = trim(fgets($stdin));
+				if($input != NULL || $input != ""){
+					$foundInput = true;
+				}
+  			}
+  			$args = explode(" ",$input);				#Verarbeiten des Kommandos
   			$cmd = $args[0];
   			$args[0] = NULL;
   			switch($cmd){
   				case "help":
-  					echo("exit               - Exits this script".PHP_EOL);
   					echo("showInfo <Element> - Shows information about a element".PHP_EOL);
+  					echo("clear              - Clears the screen".PHP_EOL);
+  					echo("exit               - Exits this script".PHP_EOL);
   				break;
   				case "exit":
   					$this->shutdown();
   				break;
   				case "showInfo":
   					$this->showInfo($args[1]);
+  				break;
+  				case "clear":
+  					clear();
+  					$this->init();
   				break;
   				default:
   					echo("Unknown command '".$cmd."' (type help to get a list of avaivible commands)".PHP_EOL);
@@ -134,6 +160,9 @@ class main{
 		$this->doExit = true;
 	}
 
+	/**
+	* Konvertiert Nummern zu römischen Zahlen
+	*/
 	public function convertNumbersToLatinNumbers($number){
 		if(isset($this->mainGroupNumbers[$number])){
 			return $this->mainGroupNumbers[$number];
@@ -141,8 +170,11 @@ class main{
 		return false;
 	}
 
-	public function getElementID($element){				#Gibt die internale ElementID
-		if($element == NULL || $element == ""){			#von $element zurück
+	/**
+	* Gibt die internale ElementID von $element zurück.
+	*/
+	public function getElementID($element){
+		if($element == NULL || $element == ""){
 			return false;
 		}
 		$currentElementID = 0;
@@ -157,8 +189,11 @@ class main{
 		return false;
 	}
 
-	public function getPeriod($element){				#Gibt die PERIODE von $element
-		if($element == NULL || $element == ""){			#zurück
+	/**
+	* Gibt die PERIODE von $element zurück.
+	*/
+	public function getPeriod($element){
+		if($element == NULL || $element == ""){	
 			return false;
 		}
 		foreach($this->basicPerodicElementsAlignment as $currentPeriod => $periodElements){
@@ -171,6 +206,9 @@ class main{
 		return false;
 	}
 
+	/**
+	* Gibt die HAUPTGRUPPE von $element zurück.
+	*/
 	public function getMainGroup($element){
 		if($element == NULL || $element == ""){
 			return false;
@@ -188,6 +226,9 @@ class main{
 		return false;
 	}
 
+	/**
+	* Gibt die ELEKTRONENANZAHL von $element zurück.
+	*/
 	public function getElectrons($element){
 		$elementID = $this->getElementID($element);
   		if(!$elementID){
@@ -207,16 +248,18 @@ class main{
 		return false;
 	}
 
+	/**
+	* Gibt die VALENZELEKTRONENANZAHL von $element zurück.
+	*/
 	public function getValenceElectrons($element){
 		if($element == NULL || $element == ""){
 			return false;
 		}
-  		$period = $this->getPeriod($element);
+  		$period = $this->getMainGroup($element);
   		if(!$period){
   			echo("Could not find element '".$element."'!".PHP_EOL);
 			return false;
   		}
   		return $period;
-  		return false;
 	}
 }
